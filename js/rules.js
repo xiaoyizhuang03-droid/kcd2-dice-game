@@ -36,7 +36,7 @@ function straightScore(faces) {
 export function scoreSelection(faces, opts = {}) {
   const fixed = faces.filter(f => f !== DEVIL);
   const devils = faces.length - fixed.length;
-  const best = (arr) => Math.max(straightScore(arr), fixedScore(arr, opts.carpenter));
+  const best = (arr) => Math.max(straightScore(arr), fixedScore(arr), fixedScore(arr, opts.carpenter));
   if (devils === 0) return best(fixed);
   // 单独一颗通配骰无法组成任何得分组合（不能当作单1/单5计分）
   if (devils > 0 && faces.length === 1) return 0;
@@ -84,5 +84,8 @@ export function scoringDiceIndices(faces) {
   if (faces.length === 6 && cover(1, 6)) faces.forEach((_, i) => idx.add(i));
   else if (faces.length === 5 && cover(1, 5)) faces.forEach((_, i) => idx.add(i));
   else if (faces.length === 5 && cover(2, 6)) faces.forEach((_, i) => idx.add(i));
+  if (devils > 0 && scoreSelection(faces) > 0) {
+    faces.forEach((f, i) => { if (f === DEVIL) idx.add(i); });
+  }
   return [...idx].sort((a, b) => a - b);
 }

@@ -57,4 +57,15 @@ assert.equal(isValidSelection([1, 1, 1]), true, '三1有效');
 assert.equal(isValidSelection([1, 1, 1, 1]), true, '四1有效');
 assert.equal(isValidSelection([2, 3]), false, '无分组合无效');
 
+// 木匠切口为可选组合（回归）
+assert.equal(scoreSelection([3, 3, 3, 5], { carpenter: true }), 350, '三3+单5优先于切口');
+assert.equal(scoreSelection([3, 5], { carpenter: true }), 150, '切口3+5=150');
+assert.equal(scoreSelection([3, 5, 5, 5], { carpenter: true }), 500, '三5优先于切口');
+
+// 通配骰补单1/单5与高亮（回归）
+assert.equal(scoreSelection([1, DEVIL]), 200, '恶魔补1');
+assert.equal(scoreSelection([DEVIL, 2]), 100, '恶魔当1计分');
+assert.ok(scoringDiceIndices([DEVIL, 2]).includes(0), '通配骰应被高亮');
+assert.deepEqual(scoringDiceIndices([DEVIL, DEVIL, DEVIL, DEVIL, DEVIL]), [0, 1, 2, 3, 4], '五个通配全高亮');
+
 console.log('rules.test.js 全部通过');
