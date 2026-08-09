@@ -122,7 +122,7 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 function renderIcon(size) {
   const px = new Uint8Array(size * size * 4);
   const put = (x, y, r, g, b) => {
-    const i = (Math.round(x) * size + Math.round(y)) * 4; // 注意：x 为横坐标
+    const i = (Math.round(y) * size + Math.round(x)) * 4; // 标准行主序：(y,x)
     px[i] = r; px[i + 1] = g; px[i + 2] = b; px[i + 3] = 255;
   };
   const c = size / 2;
