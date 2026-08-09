@@ -1,5 +1,5 @@
-import { scoringDiceIndices } from './rules.js';
-import { BADGES } from './badges.js';
+import { scoringDiceIndices, scoreSelection } from './rules.js';
+import { BADGES, getBadge } from './badges.js';
 import { DICE_TYPES } from './dice.js';
 import { playShake } from './sound.js';
 
@@ -192,6 +192,21 @@ export function createUI({ onAction }) {
     if (btnGiveUp) btnGiveUp.disabled = state.phase === 'gameover';
   }
 
+  function renderPassPreview(state) {
+    const valEl = document.getElementById('pass-preview-value');
+    const el = document.getElementById('pass-preview');
+    if (!el || !valEl) return;
+    const pl = state.players[state.turn];
+    const carpenter = getBadge(pl.badge)?.effect === 'carpenter';
+    const held = state.roll.filter((_, j) => state.held[j]);
+    const heldScore = held.length ? scoreSelection(held, { carpenter }) : 0;
+    let total = state.turnScore + heldScore;
+    if (state.warlordActive) total = Math.round(total * 1.5);
+    const has = total > 0 && state.phase === 'rolling';
+    valEl.textContent = has ? String(total) : '—';
+    el.classList.toggle('has-value', has);
+  }
+
   function renderStatus(state) {
     if (!statusEl) return;
     if (state.phase === 'gameover') statusEl.textContent = `${state.players[state.winner].name} 获胜！`;
@@ -203,6 +218,7 @@ export function createUI({ onAction }) {
   function render(state) {
     currentState = state;
     renderScoreboard(state);
+    renderPassPreview(state);
     renderDice(state);
     renderStatus(state);
     if (logEl) logEl.textContent = state.log.slice(-3).join(' · ');
