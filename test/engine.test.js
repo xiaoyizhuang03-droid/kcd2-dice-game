@@ -113,4 +113,21 @@ s11 = act(s11, { type: 'continueRoll' }); // 剩余5 +1 → 6颗
 assert.equal(s11.roll.length, 6, '法师徽章额外骰生效');
 assert.equal(s11.players[0].badgeUsed, true, '法师徽章标记已用');
 
+// 爆骰认输：turnScore 清零并轮换
+const midRng2 = (() => { let i = 0; const seq = [0.2, 0.4, 0.55, 0.9, 0.2, 0.4]; return () => seq[i++ % seq.length]; })();
+let s12 = newGame(base, midRng2);
+s12 = act(s12, { type: 'roll' }); // [2,3,4,6,2,3] 爆骰
+assert.equal(s12.phase, 'bust');
+s12 = act(s12, { type: 'bustAccept' });
+assert.equal(s12.phase, 'idle');
+assert.equal(s12.turn, 1, '爆骰认输后轮到对手');
+assert.equal(s12.turnScore, 0, '本回合得分清零');
+assert.equal(s12.roll.length, 0);
+
+// state 可 JSON 序列化（联机基础）
+let s13 = newGame(base);
+s13 = act(s13, { type: 'roll' });
+const revived = JSON.parse(JSON.stringify(s13));
+assert.deepEqual(revived.players[0], s13.players[0], 'state 可序列化往返');
+
 console.log('engine.test.js 全部通过');

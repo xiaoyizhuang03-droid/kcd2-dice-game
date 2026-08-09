@@ -10,7 +10,7 @@ export function newGame(config, rng = Math.random) {
     config: {
       mode: config.mode || 'ai',
       target: config.target || 2000,
-      players: config.players,
+      players: [...config.players],
     },
     turn: 0,
     phase: 'idle',
@@ -173,6 +173,7 @@ export function act(state, action) {
       return s;
     }
     case 'giveUp': {
+      if (s.phase === 'gameover') return s;
       s.winner = (s.turn + 1) % 2;
       s.phase = 'gameover';
       log(`${pl.name} 认输，${p(s, s.winner).name} 获胜`);
