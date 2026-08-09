@@ -73,7 +73,11 @@ function renderDicePicker() {
     picker.appendChild(row);
   });
   const totalEl = document.getElementById('dice-total');
-  if (totalEl) totalEl.textContent = `已选 ${total}/6`;
+  if (totalEl) {
+    totalEl.textContent = `已选 ${total}/6`;
+    totalEl.classList.toggle('incomplete', total !== 6);
+  }
+  document.getElementById('btn-start').disabled = total !== 6;
 }
 
 function initSetupPanel() {
@@ -192,7 +196,6 @@ function startGame() {
     { name: isPvp ? '玩家一' : '亨利', dieIds: [...settings.myDice], badge: settings.myBadge },
     { name: isPvp ? '玩家二' : '酒馆老手', dieIds: Array(6).fill('normal'), badge: isPvp ? settings.myBadge2 : null },
   ];
-  if (!isPvp && settings.myDice.length < 6) players[0].dieIds = players[0].dieIds.concat(Array(6 - players[0].dieIds.length).fill('normal'));
   state = newGame({ mode: settings.mode, target: settings.target, players });
   // 只创建一次 UI：重复 createUI 会累加按钮监听器（重开一局后一次点击触发多次动作）
   if (!ui) ui = createUI({ onAction: handleAction });
