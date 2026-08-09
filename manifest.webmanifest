@@ -1,0 +1,16 @@
+{
+  "name": "骰子 · 酒馆博弈",
+  "short_name": "骰子",
+  "description": "天国拯救2 风格骰子游戏：对战 AI 或本地双人，掷骰、计分、收集徽章。",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#241a10",
+  "theme_color": "#3d2b1f",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

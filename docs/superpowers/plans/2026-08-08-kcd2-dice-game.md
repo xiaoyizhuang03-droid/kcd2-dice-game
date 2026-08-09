@@ -230,6 +230,8 @@ export function scoreSelection(faces, opts = {}) {
   const devils = faces.length - fixed.length;
   const best = (arr) => Math.max(straightScore(arr), fixedScore(arr, opts.carpenter));
   if (devils === 0) return best(fixed);
+  // 单独一颗通配骰无法组成任何得分组合（不能当作单1/单5计分）
+  if (devils > 0 && faces.length === 1) return 0;
   let max = 0;
   const walk = (idx, arr) => {
     if (idx === devils) { max = Math.max(max, best(arr)); return; }
@@ -407,7 +409,7 @@ import { BADGES } from '../js/badges.js';
 for (const id of ['resurrection', 'carpenter', 'warlord', 'might']) {
   assert.ok(BADGES[id], `缺少徽章 ${id}`);
 }
-assert.ok(BADGES.carpenter.carpenterScore === true, '木匠徽章开启切口组合');
+assert.ok(BADGES.carpenter.effect === 'carpenter', '木匠徽章 effect 为 carpenter');
 ```
 
 - [ ] **Step 2: 运行确认失败**
@@ -547,11 +549,14 @@ assert.equal(s3.turnScore, 8000, '六个1=1000×2^3=8000');
 ```
 
 ```js
-// 爆骰：rng=0.45 → 普通骰恒掷3，无分即爆
-const midRng = () => 0.45;
+// 爆骰：序列 rng 掷出 [2,3,4,6,2,3]（无1无5无三同）→ 无分即爆
+// 注：不能用恒定 rng——六颗同面（如恒3）会组成三同点，必然有分
+let midI = 0;
+const midSeq = [0.2, 0.4, 0.55, 0.9, 0.2, 0.4]; // → 面 [2,3,4,6,2,3]
+const midRng = () => midSeq[midI++ % midSeq.length];
 let s4 = newGame(base, midRng);
 s4 = act(s4, { type: 'roll' });
-assert.equal(s4.phase, 'bust', '全为3应爆骰');
+assert.equal(s4.phase, 'bust', '无分组合应爆骰');
 ```
 
 **轮换与胜利：**
@@ -608,7 +613,7 @@ const RS = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','n
 let s10 = newGame({ mode: 'ai', target: 2000, players: [RS, P2] }, midRng);
 s10 = act(s10, { type: 'roll' }); // 爆骰
 assert.equal(s10.phase, 'bust');
-s10 = act(s10, { type: 'resurrect' }); // 重掷（仍全3 → 再次爆骰）
+s10 = act(s10, { type: 'resurrect' }); // 重掷（序列仍为无分组合 → 再次爆骰）
 assert.equal(s10.phase, 'bust');
 assert.equal(s10.players[0].resurrectUsed, true);
 ```
@@ -748,6 +753,7 @@ export function act(state, action) {
         return s;
       }
       const remaining = s.roll.length - heldFaces.length;
+      s.hot = false; // 非全保留重掷，热骰状态解除
       const pool = rollPool(s, remaining + (s.extraDieActive ? 1 : 0), rng);
       s.roll = pool.faces;
       s.dieIds = pool.dieIds;
@@ -1565,7 +1571,8 @@ function startGame() {
   ];
   if (!isPvp && settings.myDice.length < 6) players[0].dieIds = players[0].dieIds.concat(Array(6 - players[0].dieIds.length).fill('normal'));
   state = newGame({ mode: settings.mode, target: settings.target, players });
-  ui = createUI({ onAction: handleAction });
+  // 只创建一次 UI：重复 createUI 会累加按钮监听器（重开一局后一次点击触发多次动作）
+  if (!ui) ui = createUI({ onAction: handleAction });
   render();
   startTutorialIfNeeded();
 }

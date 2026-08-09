@@ -1,0 +1,214 @@
+:root {
+  --wood-dark: #241a10;
+  --wood: #3d2b1f;
+  --bone: #f0e3c8;
+  --gold: #c9976b;
+  --text-light: #e8d5b0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--wood-dark); color: var(--text-light); font-family: Georgia, "Times New Roman", serif; }
+
+/* —— 布局 —— */
+#table-bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.game { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+.game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.game-header h1 { font-family: Georgia, serif; letter-spacing: 3px; color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+.header-actions { display: flex; gap: 8px; }
+
+.scoreboard { display: grid; grid-template-columns: 1fr 160px 1fr; gap: 12px; align-items: stretch; }
+.player-card {
+  background: linear-gradient(180deg, rgba(60,42,28,.92), rgba(36,26,16,.92));
+  border: 1px solid #5c452a; border-radius: 12px; padding: 14px 18px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+  text-align: center;
+}
+.player-card.active { border-color: var(--gold); box-shadow: 0 0 18px rgba(201,151,107,.35), 0 6px 16px rgba(0,0,0,.5); }
+.player-name { font-size: 15px; color: var(--gold); letter-spacing: 2px; }
+.player-score { font-size: 44px; font-weight: bold; color: var(--text-light); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.player-badge { font-size: 12px; color: #b99b6a; min-height: 16px; }
+.player-badge.used { color: #7a6a50; text-decoration: line-through; }
+
+.turn-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(20,14,8,.85); border: 1px solid #3a2c1c; border-radius: 12px; padding: 10px; }
+.turn-panel .label { font-size: 12px; color: #b99b6a; }
+.turn-score { font-size: 34px; color: #ffd08a; text-shadow: 0 0 12px rgba(255,170,80,.4); }
+
+.table { margin-top: 16px; background: rgba(24,17,10,.72); border: 1px solid #3a2c1c; border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+.status { text-align: center; color: var(--text-light); font-size: 16px; letter-spacing: 1px; margin-bottom: 14px; min-height: 24px; }
+
+.dice-area { display: flex; gap: 14px; justify-content: center; align-items: center; min-height: 132px; flex-wrap: wrap; padding: 8px 0; }
+.die-wrap { position: relative; transition: transform .18s ease; cursor: pointer; }
+.die-wrap canvas { display: block; border-radius: 14px; box-shadow: 0 8px 18px rgba(0,0,0,.55); }
+.die-wrap.held { transform: translateY(-14px); }
+.die-wrap.scoring canvas { box-shadow: 0 0 0 3px rgba(255,200,80,.55), 0 8px 18px rgba(0,0,0,.55); }
+.die-wrap.tumble { animation: tumble .4s ease; }
+@keyframes tumble {
+  0% { transform: rotate(-12deg) translateY(0); }
+  40% { transform: rotate(10deg) translateY(-18px); }
+  100% { transform: rotate(0) translateY(0); }
+}
+
+.actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.btn {
+  padding: 10px 20px; font-family: inherit; font-size: 15px; letter-spacing: 1px; cursor: pointer;
+  background: linear-gradient(180deg, #5c452a, #3d2b1f); color: var(--text-light);
+  border: 1px solid #6b5436; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,.4);
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+.btn.primary { background: linear-gradient(180deg, #a5723f, #7a4f26); border-color: #c9976b; color: #fff6e6; }
+.btn.ghost { background: transparent; }
+.badge-btn { color: #ffd08a; }
+
+.log { margin-top: 14px; color: #b99b6a; font-size: 13px; line-height: 1.7; min-height: 42px; text-align: center; }
+
+/* —— 弹层 —— */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(10,7,4,.78); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal-backdrop.hidden { display: none; }
+
+/* —— 摇骰骰盅揭盅动画 —— */
+.dice-area { position: relative; }
+.die-wrap.cup-phase { opacity: 0; visibility: hidden; }
+.die-wrap.settle { animation: dice-settle .38s ease-out both; }
+@keyframes dice-settle {
+  0% { transform: translateY(-26px) scale(1.12); opacity: 0; }
+  60% { transform: translateY(5px) scale(1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.cup {
+  position: absolute; left: 50%; top: 50%;
+  width: 220px; height: 150px; margin-left: -110px; margin-top: -75px;
+  background: linear-gradient(180deg, #7a5a34, #4a3019);
+  border: 2px solid #5c452a;
+  border-radius: 16px 16px 28px 28px;
+  box-shadow: 0 14px 30px rgba(0,0,0,.6), inset 0 2px 8px rgba(255,235,190,.14);
+  z-index: 6; pointer-events: none;
+  animation: cup-shake-lift .9s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.cup::before {
+  content: ''; position: absolute; bottom: -3px; left: 8%; width: 84%; height: 16px;
+  background: rgba(26,15,8,.95); border-radius: 50%;
+}
+.cup::after {
+  content: ''; position: absolute; inset: 10px 14px;
+  border-radius: 10px 10px 20px 20px;
+  background: rgba(20,12,6,.55);
+}
+@keyframes cup-shake-lift {
+  0% { transform: rotate(0) translateY(0); }
+  12% { transform: rotate(-7deg) translateY(-10px); }
+  22% { transform: rotate(6deg) translateY(6px); }
+  32% { transform: rotate(-6deg) translateY(-12px); }
+  42% { transform: rotate(7deg) translateY(8px); }
+  52% { transform: rotate(-5deg) translateY(-8px); }
+  62% { transform: rotate(0) translateY(0); }
+  88% { transform: rotate(0) translateY(-120px); opacity: 1; }
+  100% { transform: rotate(0) translateY(-150px); opacity: 0; }
+}
+.modal {
+  background: linear-gradient(180deg, #33241a, #241a10); border: 1px solid #5c452a;
+  border-radius: 16px; padding: 26px 30px; width: min(560px, 92vw); max-height: 86vh; overflow: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+}
+.modal.wide { width: min(720px, 92vw); }
+.modal h2 { color: var(--gold); letter-spacing: 2px; margin-bottom: 16px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: #c9a86f; margin-bottom: 6px; }
+.seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg-btn {
+  padding: 8px 14px; background: #2a1e12; color: #d8c49a; border: 1px solid #4a3a24; border-radius: 8px; cursor: pointer;
+}
+.seg-btn.active { background: #7a4f26; color: #fff6e6; border-color: #c9976b; }
+.target-opts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.target-opts input { width: 110px; padding: 8px; background: #1c140c; color: var(--text-light); border: 1px solid #4a3a24; border-radius: 8px; }
+.badge-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.pick-item {
+  padding: 8px 10px; background: #2a1e12; color: #d8c49a; border: 1px solid #4a3a24; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.pick-item.selected { background: #7a4f26; border-color: #c9976b; color: #fff6e6; }
+.pick-item:disabled { opacity: .35; cursor: not-allowed; }
+
+/* —— 骰子数量步进器 —— */
+.dice-picker { display: flex; flex-direction: column; gap: 8px; }
+.pick-row { display: flex; align-items: center; gap: 8px; }
+.pick-name { flex: 1; font-size: 13px; color: #d8c49a; cursor: help; }
+.stepper {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: #2a1e12; color: #e8d5b0; border: 1px solid #4a3a24;
+  cursor: pointer; font-size: 16px; line-height: 1;
+}
+.stepper:hover:not(:disabled) { background: #3a2a18; }
+.stepper:disabled { opacity: .35; cursor: not-allowed; }
+.pick-count {
+  min-width: 24px; text-align: center; font-size: 15px; color: #ffd08a;
+  font-family: "Alegreya", Georgia, serif; font-variant-numeric: tabular-nums;
+}
+.dice-total { margin-top: 8px; font-size: 12px; color: #b99b6a; }
+.dice-total.incomplete { color: #c05030; }
+
+/* —— 教程 —— */
+.tutorial {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); width: min(440px, 92vw);
+  background: linear-gradient(180deg, #3a2b1c, #2a1e12); border: 1px solid #7a6236; border-radius: 14px;
+  padding: 18px 20px; z-index: 80; box-shadow: 0 16px 40px rgba(0,0,0,.7);
+}
+.tutorial h3 { color: #ffd08a; margin-bottom: 6px; }
+.tutorial p { color: #e8d5b0; font-size: 14px; line-height: 1.6; }
+.tutorial-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.tutorial-highlight { outline: 3px solid rgba(255,208,138,.85); outline-offset: 4px; border-radius: 10px; animation: pulse 1.2s ease infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,208,138,.5); } 50% { box-shadow: 0 0 0 10px rgba(255,208,138,0); } }
+
+#rules-content { color: #e8d5b0; font-size: 14px; line-height: 1.8; margin-bottom: 16px; }
+#rules-content table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+#rules-content th, #rules-content td { border: 1px solid #4a3a24; padding: 5px 8px; text-align: left; }
+#rules-content th { background: #2a1e12; color: #c9a86f; }
+
+/* 通用隐藏（tutorial 等非 modal-backdrop 元素依赖此规则） */
+.hidden { display: none; }
+
+/* —— 爆骰反馈 —— */
+.player-card.busted {
+  border-color: #c05030;
+  box-shadow: 0 0 22px rgba(200, 64, 32, .5), 0 6px 16px rgba(0,0,0,.5);
+  animation: bust-flash .5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes bust-flash {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* —— 数字字体与对齐（表格数字） —— */
+.game-header h1 { font-family: "Cinzel", Georgia, serif; }
+.player-score, .turn-score {
+  font-family: "Alegreya", Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.03em;
+}
+
+/* —— 收手分数实时预览（低调不突兀） —— */
+.pass-preview {
+  display: flex; align-items: baseline; gap: 6px;
+  margin-top: 8px; font-size: 12px; color: #6f5f45;
+  letter-spacing: 1px; transition: color 160ms ease;
+}
+.pass-preview.has-value { color: #b99b6a; }
+.pp-value {
+  font-family: "Alegreya", Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-size: 17px; color: #6f5f45;
+  transition: color 160ms ease;
+}
+.pass-preview.has-value .pp-value { color: #ffd08a; }
+
+/* —— 移动端适配（PWA 添加到主屏后竖屏） —— */
+@media (max-width: 640px) {
+  .game { padding: 14px 10px; }
+  .game-header { flex-direction: column; gap: 10px; }
+  .scoreboard { grid-template-columns: 1fr; gap: 8px; }
+  .player-score { font-size: 34px; }
+  .dice-area { min-height: 112px; gap: 8px; }
+  .actions { gap: 8px; }
+  .btn { padding: 10px 14px; font-size: 14px; }
+}

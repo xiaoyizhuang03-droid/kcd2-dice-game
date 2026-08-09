@@ -1,0 +1,9 @@
+{
+  "name": "kcd2-dice-game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/rules.test.js && node test/engine.test.js && node test/simulate.test.js && node test/pwa.test.js",
+    "start": "npx serve ."
+  }
+}
