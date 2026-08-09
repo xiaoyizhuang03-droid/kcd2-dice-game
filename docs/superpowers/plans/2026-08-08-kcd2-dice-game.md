@@ -409,7 +409,7 @@ import { BADGES } from '../js/badges.js';
 for (const id of ['resurrection', 'carpenter', 'warlord', 'might']) {
   assert.ok(BADGES[id], `缺少徽章 ${id}`);
 }
-assert.ok(BADGES.carpenter.carpenterScore === true, '木匠徽章开启切口组合');
+assert.ok(BADGES.carpenter.effect === 'carpenter', '木匠徽章 effect 为 carpenter');
 ```
 
 - [ ] **Step 2: 运行确认失败**
