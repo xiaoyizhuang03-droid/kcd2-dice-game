@@ -549,11 +549,14 @@ assert.equal(s3.turnScore, 8000, '六个1=1000×2^3=8000');
 ```
 
 ```js
-// 爆骰：rng=0.45 → 普通骰恒掷3，无分即爆
-const midRng = () => 0.45;
+// 爆骰：序列 rng 掷出 [2,3,4,6,2,3]（无1无5无三同）→ 无分即爆
+// 注：不能用恒定 rng——六颗同面（如恒3）会组成三同点，必然有分
+let midI = 0;
+const midSeq = [0.2, 0.4, 0.55, 0.9, 0.2, 0.4]; // → 面 [2,3,4,6,2,3]
+const midRng = () => midSeq[midI++ % midSeq.length];
 let s4 = newGame(base, midRng);
 s4 = act(s4, { type: 'roll' });
-assert.equal(s4.phase, 'bust', '全为3应爆骰');
+assert.equal(s4.phase, 'bust', '无分组合应爆骰');
 ```
 
 **轮换与胜利：**
@@ -610,7 +613,7 @@ const RS = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','n
 let s10 = newGame({ mode: 'ai', target: 2000, players: [RS, P2] }, midRng);
 s10 = act(s10, { type: 'roll' }); // 爆骰
 assert.equal(s10.phase, 'bust');
-s10 = act(s10, { type: 'resurrect' }); // 重掷（仍全3 → 再次爆骰）
+s10 = act(s10, { type: 'resurrect' }); // 重掷（序列仍为无分组合 → 再次爆骰）
 assert.equal(s10.phase, 'bust');
 assert.equal(s10.players[0].resurrectUsed, true);
 ```
@@ -750,6 +753,7 @@ export function act(state, action) {
         return s;
       }
       const remaining = s.roll.length - heldFaces.length;
+      s.hot = false; // 非全保留重掷，热骰状态解除
       const pool = rollPool(s, remaining + (s.extraDieActive ? 1 : 0), rng);
       s.roll = pool.faces;
       s.dieIds = pool.dieIds;
