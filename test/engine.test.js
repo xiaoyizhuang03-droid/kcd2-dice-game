@@ -7,7 +7,7 @@ const P2 = { name: 'AI', dieIds: ['normal','normal','normal','normal','normal','
 const base = { mode: 'ai', target: 2000, players: [P1, P2] };
 
 // 开局：phase=idle，轮到我方，掷骰数=6
-let s = newGame(base);
+let s = newGame(base, () => 0); // 受控 rng：恒掷出 1，避免首掷爆骰导致 flaky
 assert.equal(s.phase, 'idle');
 assert.equal(s.turn, 0);
 assert.equal(s.roll.length, 0);
