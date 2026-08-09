@@ -82,7 +82,7 @@ body { background: var(--wood-dark); color: var(--text-light); font-family: Geor
   border-radius: 16px 16px 28px 28px;
   box-shadow: 0 14px 30px rgba(0,0,0,.6), inset 0 2px 8px rgba(255,235,190,.14);
   z-index: 6; pointer-events: none;
-  animation: cup-shake-lift .9s ease-in-out forwards;
+  animation: cup-shake-lift .9s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 .cup::before {
   content: ''; position: absolute; bottom: -3px; left: 8%; width: 84%; height: 16px;
@@ -146,3 +146,24 @@ body { background: var(--wood-dark); color: var(--text-light); font-family: Geor
 
 /* 通用隐藏（tutorial 等非 modal-backdrop 元素依赖此规则） */
 .hidden { display: none; }
+
+/* —— 爆骰反馈 —— */
+.player-card.busted {
+  border-color: #c05030;
+  box-shadow: 0 0 22px rgba(200, 64, 32, .5), 0 6px 16px rgba(0,0,0,.5);
+  animation: bust-flash .5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes bust-flash {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* —— 数字字体与对齐（表格数字） —— */
+.game-header h1 { font-family: "Cinzel", Georgia, serif; }
+.player-score, .turn-score {
+  font-family: "Alegreya", Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.03em;
+}

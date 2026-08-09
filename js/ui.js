@@ -117,7 +117,7 @@ export function createUI({ onAction }) {
   function renderDice(state) {
     const fresh = state.rollCount !== lastRollCount;
     lastRollCount = state.rollCount;
-    const cupPhase = fresh && state.phase === 'rolling';
+    const cupPhase = fresh && (state.phase === 'rolling' || state.phase === 'bust');
     diceArea.innerHTML = '';
     state.roll.forEach((face, i) => {
       const wrap = document.createElement('div');
@@ -161,6 +161,7 @@ export function createUI({ onAction }) {
       if (nameEl) {
         nameEl.textContent = pl.name;
         nameEl.parentElement.classList.toggle('active', i === state.turn && state.phase !== 'gameover');
+        nameEl.parentElement.classList.toggle('busted', i === state.turn && state.phase === 'bust');
       }
       if (badgeEl) {
         badgeEl.textContent = pl.badge ? BADGES[pl.badge].name : '';

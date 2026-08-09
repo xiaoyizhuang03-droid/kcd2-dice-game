@@ -203,22 +203,23 @@ function afterAction() {
     const pl = state.players[state.turn];
     const canResurrect = pl.badge === 'resurrection' && !pl.resurrectUsed;
     const isHuman = settings.mode === 'pvp' || state.turn === 0;
-    if (canResurrect && isHuman) {
-      if (confirm('爆骰！是否使用转生徽章重掷？')) {
+    // 等骰盅揭盅动画播完（~950ms，与 ui 揭盅定时 900ms 衔接）再处理爆骰
+    const resolveBust = () => {
+      if (canResurrect && isHuman) {
+        if (confirm('爆骰！是否使用转生徽章重掷？')) {
+          state = act(state, { type: 'resurrect' });
+        } else {
+          state = act(state, { type: 'bustAccept' });
+        }
+      } else if (canResurrect) {
         state = act(state, { type: 'resurrect' });
-        render();
-        afterAction();
-        return;
+      } else {
+        state = act(state, { type: 'bustAccept' });
       }
-    } else if (canResurrect) {
-      state = act(state, { type: 'resurrect' });
       render();
       afterAction();
-      return;
-    }
-    state = act(state, { type: 'bustAccept' });
-    render();
-    afterAction();
+    };
+    setTimeout(resolveBust, 950);
     return;
   }
   if (state.phase === 'gameover') {
