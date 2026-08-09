@@ -3,6 +3,11 @@ if ('serviceWorker' in navigator) {
   const secure = location.protocol === 'https:' ||
     ['localhost', '127.0.0.1'].includes(location.hostname);
   if (secure) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js')
+      .then((reg) => {
+        // 每次加载主动检查 SW 更新，让新版本（含新缓存）尽快接管
+        reg.update();
+      })
+      .catch(() => {});
   }
 }

@@ -1,5 +1,5 @@
 // Service Worker：白名单预缓存 + cache-first，离线可玩
-const CACHE = 'dice-v1';
+const CACHE = 'dice-v2';
 // 白名单：精确列举全部本地静态资源（相对 sw.js 的路径，部署到子路径也正确）
 const ASSETS = [
   './',
