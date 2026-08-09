@@ -188,6 +188,13 @@ let aiRunning = false;
 let bustPending = false;
 let aiGeneration = 0;
 
+// —— 动画节奏（配合 ui.js 骰盅揭盅 900ms / settle 380ms） ——
+const BUST_DELAY = 2800;      // 爆骰结算延迟：骰盅揭盅后让玩家看清骰面再结算
+const AI_ROLL_DELAY = 1500;   // AI 掷骰前停顿（示意轮到 AI）
+const AI_REVEAL_DELAY = 1800; // AI 掷骰后停顿：等骰盅揭盅并停留看清骰面
+const AI_SELECT_DELAY = 420;  // AI 逐个选骰的间隔（展示它选了哪些骰子）
+const AI_DECIDE_DELAY = 1200; // AI 做出继续/收手决策前的停顿
+
 function startGame() {
   aiRunning = false;
   aiGeneration++;
@@ -230,7 +237,7 @@ function afterAction() {
     const canResurrect = pl.badge === 'resurrection' && !pl.resurrectUsed;
     const isHuman = settings.mode === 'pvp' || state.turn === 0;
     bustPending = true; // 爆骰动画窗口内屏蔽输入
-    // 等骰盅揭盅动画播完（~950ms，与 ui 揭盅定时 900ms 衔接）再处理爆骰
+    // 骰盅揭盅（900ms）+ 骰子 settle 后停留，给玩家看清爆骰骰面的时间
     const resolveBust = () => {
       bustPending = false;
       if (canResurrect && isHuman) {
@@ -247,7 +254,7 @@ function afterAction() {
       render();
       afterAction();
     };
-    setTimeout(resolveBust, 950);
+    setTimeout(resolveBust, BUST_DELAY);
     return;
   }
   if (state.phase === 'gameover') {
@@ -258,13 +265,21 @@ function afterAction() {
 async function runAITurn() {
   const gen = aiGeneration;
   while (state.turn === 1 && (state.phase === 'idle' || state.phase === 'rolling')) {
-    await delay(1200);
-    if (gen !== aiGeneration) return; // 重开一局：取消本循环
     if (state.phase === 'idle') {
+      await delay(AI_ROLL_DELAY); // 轮到 AI，先停顿示意
+      if (gen !== aiGeneration) return; // 重开一局：取消本循环
       state = act(state, { type: 'roll' });
     } else if (state.phase === 'rolling') {
+      await delay(AI_REVEAL_DELAY); // 骰盅揭盅 + 停留，让玩家看清 AI 掷出的骰面
+      if (gen !== aiGeneration) return;
       const hold = scoringDiceIndices(state.roll);
-      hold.forEach(i => { state = act(state, { type: 'select', i }); });
+      // 逐个选中，展示 AI 保留哪些骰子（高亮逐步出现）
+      for (const i of hold) {
+        state = act(state, { type: 'select', i });
+        render();
+        await delay(AI_SELECT_DELAY);
+        if (gen !== aiGeneration) return;
+      }
       const heldCount = state.held.filter(Boolean).length;
       const remaining = state.roll.length - heldCount;
       const decision = aiDecision({
@@ -273,6 +288,8 @@ async function runAITurn() {
         remaining: state.hot ? 0 : remaining,
         hot: state.hot,
       });
+      await delay(AI_DECIDE_DELAY); // AI 思考：继续掷还是收手
+      if (gen !== aiGeneration) return;
       if (state.hot || remaining === 0 || decision === 'roll') {
         if (heldCount > 0) state = act(state, { type: 'continueRoll' });
         else state = act(state, { type: 'roll' });
