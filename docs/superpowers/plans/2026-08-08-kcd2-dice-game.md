@@ -1571,7 +1571,8 @@ function startGame() {
   ];
   if (!isPvp && settings.myDice.length < 6) players[0].dieIds = players[0].dieIds.concat(Array(6 - players[0].dieIds.length).fill('normal'));
   state = newGame({ mode: settings.mode, target: settings.target, players });
-  ui = createUI({ onAction: handleAction });
+  // 只创建一次 UI：重复 createUI 会累加按钮监听器（重开一局后一次点击触发多次动作）
+  if (!ui) ui = createUI({ onAction: handleAction });
   render();
   startTutorialIfNeeded();
 }
