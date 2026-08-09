@@ -166,7 +166,7 @@ function handleAction(action) {
 }
 
 function afterAction() {
-  if (settings.mode === 'ai' && state.turn === 1 && state.phase !== 'gameover') {
+  if (settings.mode === 'ai' && state.turn === 1 && (state.phase === 'idle' || state.phase === 'rolling')) {
     aiRunning = true;
     runAITurn();
     return;
@@ -200,7 +200,7 @@ function afterAction() {
 
 async function runAITurn() {
   const gen = aiGeneration;
-  while (state.turn === 1 && state.phase !== 'gameover') {
+  while (state.turn === 1 && (state.phase === 'idle' || state.phase === 'rolling')) {
     await delay(650);
     if (gen !== aiGeneration) return; // 重开一局：取消本循环
     if (state.phase === 'idle') {
