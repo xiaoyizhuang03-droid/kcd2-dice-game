@@ -19,6 +19,7 @@ export function newGame(config, rng = Math.random) {
     dieIds: [],
     turnScore: 0,
     hot: false,
+    rollCount: 0,
     busted: false,
     warlordActive: false,
     extraDieActive: false,
@@ -67,6 +68,7 @@ export function act(state, action) {
       if (s.phase !== 'idle') return s;
       const pool = rollPool(s, baseCount, rng);
       s.roll = pool.faces;
+      s.rollCount++;
       s.dieIds = pool.dieIds;
       s.held = s.roll.map(() => false);
       s.hot = false;
@@ -100,6 +102,7 @@ export function act(state, action) {
         s.hot = true;
         const pool = rollPool(s, baseCount, rng);
         s.roll = pool.faces;
+        s.rollCount++;
         s.dieIds = pool.dieIds;
         s.held = s.roll.map(() => false);
         if (isBust(s.roll)) {
@@ -115,6 +118,7 @@ export function act(state, action) {
       s.hot = false; // 非全保留重掷，热骰状态解除
       const pool = rollPool(s, remaining + (s.extraDieActive ? 1 : 0), rng);
       s.roll = pool.faces;
+      s.rollCount++;
       s.dieIds = pool.dieIds;
       s.held = s.roll.map(() => false);
       if (isBust(s.roll)) {

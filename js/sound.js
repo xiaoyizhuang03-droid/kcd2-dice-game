@@ -38,3 +38,13 @@ export function playHold() {
 export function playBank() {
   blip(330, 660, 0.12, 0.10);
 }
+
+// 摇骰声：骰盅内连续碰撞 + 落定闷响
+export function playShake() {
+  const c = audio();
+  if (!c) return;
+  for (let i = 0; i < 7; i++) {
+    setTimeout(() => blip(320 + Math.random() * 260, 180, 0.035, 0.07), i * 85);
+  }
+  setTimeout(() => blip(130, 55, 0.16, 0.13), 640); // 揭盅落定闷响
+}

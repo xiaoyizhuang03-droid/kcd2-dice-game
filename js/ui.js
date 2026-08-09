@@ -1,5 +1,6 @@
 import { scoringDiceIndices } from './rules.js';
 import { BADGES } from './badges.js';
+import { playShake } from './sound.js';
 
 const PIP_LAYOUT = {
   1: [[0.5, 0.5]],
@@ -108,12 +109,25 @@ export function createUI({ onAction }) {
   const statusEl = document.getElementById('status');
   const logEl = document.getElementById('log');
 
+  let currentState = null;
+  let lastRollCount = -1;
+  let cupTimer = null;
+  let justRevealed = false;
+
   function renderDice(state) {
+    const fresh = state.rollCount !== lastRollCount;
+    lastRollCount = state.rollCount;
+    const cupPhase = fresh && state.phase === 'rolling';
     diceArea.innerHTML = '';
-    const hl = scoringDiceIndices(state.roll);
     state.roll.forEach((face, i) => {
       const wrap = document.createElement('div');
-      wrap.className = 'die-wrap' + (state.held[i] ? ' held' : '') + (hl.includes(i) ? ' scoring' : '');
+      let cls = 'die-wrap';
+      if (cupPhase) cls += ' cup-phase';
+      else if (justRevealed) cls += ' settle';
+      if (state.held[i]) cls += ' held';
+      const hl = scoringDiceIndices(state.roll);
+      if (hl.includes(i)) cls += ' scoring';
+      wrap.className = cls;
       const cv = document.createElement('canvas');
       cv.width = cv.height = 96;
       drawDiceFace(cv, face, { held: state.held[i], highlighted: hl.includes(i) });
@@ -121,8 +135,21 @@ export function createUI({ onAction }) {
       wrap.dataset.index = i;
       wrap.addEventListener('click', () => { if (state.phase === 'rolling') onAction({ type: 'select', i }); });
       diceArea.appendChild(wrap);
-      if (state.busted === false && state.phase === 'rolling') wrap.classList.add('tumble');
     });
+    if (cupPhase) {
+      const cup = document.createElement('div');
+      cup.className = 'cup';
+      cup.setAttribute('aria-hidden', 'true');
+      diceArea.appendChild(cup);
+      playShake();
+      clearTimeout(cupTimer);
+      cupTimer = setTimeout(() => {
+        justRevealed = true;
+        if (currentState) render(currentState);
+      }, 900);
+    } else if (justRevealed) {
+      justRevealed = false;
+    }
   }
 
   function renderScoreboard(state) {
@@ -157,6 +184,7 @@ export function createUI({ onAction }) {
   }
 
   function render(state) {
+    currentState = state;
     renderScoreboard(state);
     renderDice(state);
     renderStatus(state);

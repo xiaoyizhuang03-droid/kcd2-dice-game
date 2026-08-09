@@ -159,4 +159,12 @@ assert.equal(shouldShowTutorial(), true, '首次应显示教程');
 markTutorialDone();
 assert.equal(shouldShowTutorial(), false, '标记后不再显示');
 
+// rollCount：每次新掷骰递增（供 UI 识别"刚掷出"）
+let sC = newGame(base, () => 0);
+sC = act(sC, { type: 'roll' });
+assert.equal(sC.rollCount, 1, '首次掷骰 rollCount=1');
+sC = act(sC, { type: 'select', i: 0 });
+sC = act(sC, { type: 'continueRoll' });
+assert.equal(sC.rollCount, 2, '继续掷骰 rollCount=2');
+
 console.log('engine.test.js 全部通过');

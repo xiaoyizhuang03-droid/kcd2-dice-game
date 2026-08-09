@@ -5,7 +5,7 @@ import { BADGES } from './badges.js';
 import { DICE_TYPES } from './dice.js';
 import { aiDecision } from './ai.js';
 import { TUTORIAL_STEPS, shouldShowTutorial, markTutorialDone } from './tutorial.js';
-import { playRoll, playHold, playBank } from './sound.js';
+import { playHold, playBank } from './sound.js';
 
 const DICE_CHOICES = ['normal', 'lucky', 'devil', 'antiochus', 'trinity', 'even', 'odd', 'misfortune', 'unbalanced'];
 
@@ -186,8 +186,7 @@ function render() {
 
 function handleAction(action) {
   if (aiRunning) return;
-  if (action.type === 'roll' || action.type === 'continueRoll') playRoll();
-  else if (action.type === 'select') playHold();
+  if (action.type === 'select') playHold();
   else if (action.type === 'pass') playBank();
   state = act(state, action);
   render();
@@ -230,7 +229,7 @@ function afterAction() {
 async function runAITurn() {
   const gen = aiGeneration;
   while (state.turn === 1 && (state.phase === 'idle' || state.phase === 'rolling')) {
-    await delay(650);
+    await delay(900);
     if (gen !== aiGeneration) return; // 重开一局：取消本循环
     if (state.phase === 'idle') {
       state = act(state, { type: 'roll' });
