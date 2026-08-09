@@ -1,0 +1,9 @@
+:root {
+  --wood-dark: #241a10;
+  --wood: #3d2b1f;
+  --bone: #f0e3c8;
+  --gold: #c9976b;
+  --text-light: #e8d5b0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--wood-dark); color: var(--text-light); font-family: Georgia, "Times New Roman", serif; }
