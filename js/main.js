@@ -37,6 +37,45 @@ function renderRulesContent() {
   `;
 }
 
+function renderDicePicker() {
+  const picker = document.getElementById('dice-picker');
+  picker.innerHTML = '';
+  const total = settings.myDice.length;
+  DICE_CHOICES.forEach(id => {
+    const count = settings.myDice.filter(x => x === id).length;
+    const row = document.createElement('div');
+    row.className = 'pick-row';
+    const name = document.createElement('span');
+    name.className = 'pick-name';
+    name.textContent = DICE_TYPES[id].name;
+    name.title = DICE_TYPES[id].desc;
+    const minus = document.createElement('button');
+    minus.className = 'stepper';
+    minus.textContent = '−';
+    minus.disabled = count === 0;
+    minus.addEventListener('click', () => {
+      const i = settings.myDice.indexOf(id);
+      if (i >= 0) settings.myDice.splice(i, 1);
+      renderDicePicker();
+    });
+    const cnt = document.createElement('span');
+    cnt.className = 'pick-count';
+    cnt.textContent = count;
+    const plus = document.createElement('button');
+    plus.className = 'stepper';
+    plus.textContent = '+';
+    plus.disabled = total >= 6;
+    plus.addEventListener('click', () => {
+      settings.myDice.push(id);
+      renderDicePicker();
+    });
+    row.append(name, minus, cnt, plus);
+    picker.appendChild(row);
+  });
+  const totalEl = document.getElementById('dice-total');
+  if (totalEl) totalEl.textContent = `已选 ${total}/6`;
+}
+
 function initSetupPanel() {
   // 模式
   document.querySelectorAll('[data-mode]').forEach(b => {
@@ -71,25 +110,8 @@ function initSetupPanel() {
       settings.aiLevel = b.dataset.ai;
     });
   });
-  // 骰子选择（6 颗）
-  const picker = document.getElementById('dice-picker');
-  DICE_CHOICES.forEach(id => {
-    const b = document.createElement('button');
-    b.className = 'pick-item' + (settings.myDice.includes(id) ? ' selected' : '');
-    b.textContent = DICE_TYPES[id].name;
-    b.addEventListener('click', () => {
-      const has = settings.myDice.includes(id);
-      if (has) {
-        if (settings.myDice.length <= 1) return;
-        settings.myDice = settings.myDice.filter(x => x !== id);
-      } else {
-        if (settings.myDice.length >= 6) return;
-        settings.myDice.push(id);
-      }
-      b.classList.toggle('selected', !has);
-    });
-    picker.appendChild(b);
-  });
+  // 骰子选择（6 颗，数量步进器）
+  renderDicePicker();
   // 徽章选择
   const bpicker = document.getElementById('badge-picker');
   const none = document.createElement('button');
@@ -233,7 +255,7 @@ function afterAction() {
 async function runAITurn() {
   const gen = aiGeneration;
   while (state.turn === 1 && (state.phase === 'idle' || state.phase === 'rolling')) {
-    await delay(900);
+    await delay(1200);
     if (gen !== aiGeneration) return; // 重开一局：取消本循环
     if (state.phase === 'idle') {
       state = act(state, { type: 'roll' });

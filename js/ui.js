@@ -1,5 +1,6 @@
 import { scoringDiceIndices } from './rules.js';
 import { BADGES } from './badges.js';
+import { DICE_TYPES } from './dice.js';
 import { playShake } from './sound.js';
 
 const PIP_LAYOUT = {
@@ -9,6 +10,12 @@ const PIP_LAYOUT = {
   4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
   5: [[0.28, 0.28], [0.72, 0.28], [0.5, 0.5], [0.28, 0.72], [0.72, 0.72]],
   6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]],
+};
+
+// 骰型描边色（用于区分不同骰子）
+const DIE_ACCENT = {
+  normal: '#8a7a55', lucky: '#c9976b', devil: '#8a2f2f', antiochus: '#6f8f5f',
+  trinity: '#5f7f9a', even: '#8f5f86', odd: '#b08a4a', misfortune: '#5a5f66', unbalanced: '#7a6b52',
 };
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -36,7 +43,7 @@ function drawDevil(ctx, cx, cy, r) {
 }
 
 // 绘制一颗骨制骰子到 canvas（面值 1-6 或 0=恶魔之头）
-function drawDiceFace(canvas, face, { held = false, highlighted = false } = {}) {
+function drawDiceFace(canvas, face, { held = false, highlighted = false, dieId = null } = {}) {
   const ctx = canvas.getContext('2d');
   const s = canvas.width;
   ctx.clearRect(0, 0, s, s);
@@ -61,6 +68,13 @@ function drawDiceFace(canvas, face, { held = false, highlighted = false } = {}) 
   ctx.strokeStyle = '#8a7a55';
   ctx.lineWidth = 1.5;
   ctx.stroke();
+
+  if (dieId && DIE_ACCENT[dieId]) {
+    ctx.strokeStyle = DIE_ACCENT[dieId];
+    ctx.lineWidth = 3;
+    roundRect(ctx, x + 2.5, y + 2.5, size - 5, size - 5, size * 0.12);
+    ctx.stroke();
+  }
 
   if (face === 0) {
     drawDevil(ctx, x + size / 2, y + size / 2, size * 0.22);
@@ -130,7 +144,9 @@ export function createUI({ onAction }) {
       wrap.className = cls;
       const cv = document.createElement('canvas');
       cv.width = cv.height = 96;
-      drawDiceFace(cv, face, { held: state.held[i], highlighted: hl.includes(i) });
+      const dieId = state.dieIds ? state.dieIds[i] : null;
+      drawDiceFace(cv, face, { held: state.held[i], highlighted: hl.includes(i), dieId });
+      if (dieId && DICE_TYPES[dieId]) wrap.title = DICE_TYPES[dieId].name;
       wrap.appendChild(cv);
       wrap.dataset.index = i;
       wrap.addEventListener('click', () => { if (state.phase === 'rolling') onAction({ type: 'select', i }); });
