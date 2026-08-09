@@ -1,4 +1,4 @@
-import { scoringDiceIndices, scoreSelection } from './rules.js';
+import { scoringDiceIndices, scoreSelection, isValidSelection } from './rules.js';
 import { BADGES, getBadge } from './badges.js';
 import { DICE_TYPES } from './dice.js';
 import { playShake } from './sound.js';
@@ -199,9 +199,13 @@ export function createUI({ onAction }) {
     const pl = state.players[state.turn];
     const carpenter = getBadge(pl.badge)?.effect === 'carpenter';
     const held = state.roll.filter((_, j) => state.held[j]);
-    const heldScore = held.length ? scoreSelection(held, { carpenter }) : 0;
-    let total = state.turnScore + heldScore;
-    if (state.warlordActive) total = Math.round(total * 1.5);
+    let total = 0;
+    // 与引擎 pass 的校验一致：无持有骰（但本回合有分）或持有集合有效时，收手才可入账
+    if (held.length === 0 || isValidSelection(held, { carpenter })) {
+      const heldScore = held.length ? scoreSelection(held, { carpenter }) : 0;
+      total = state.turnScore + heldScore;
+      if (state.warlordActive) total = Math.round(total * 1.5);
+    }
     const has = total > 0 && state.phase === 'rolling';
     valEl.textContent = has ? String(total) : '—';
     el.classList.toggle('has-value', has);
