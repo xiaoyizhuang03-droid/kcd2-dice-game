@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test/rules.test.js && node test/engine.test.js",
+    "test": "node test/rules.test.js && node test/engine.test.js && node test/simulate.test.js",
     "start": "npx serve ."
   }
 }
