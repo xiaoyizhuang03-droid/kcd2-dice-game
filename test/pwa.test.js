@@ -24,5 +24,14 @@ for (const [size, file] of [[192, 'icons/icon-192.png'], [512, 'icons/icon-512.p
   ok(info && info.width === size && info.height === size, `${file} 尺寸为 ${size}x${size}`);
 }
 
+console.log('\n[Task 2] manifest');
+const manifest = JSON.parse(readFileSync(join(ROOT, 'manifest.webmanifest'), 'utf8'));
+ok(manifest.name === '骰子 \u00b7 酒馆博弈', 'manifest.name 正确');
+ok(manifest.display === 'standalone', 'manifest.display 为 standalone');
+ok(Array.isArray(manifest.icons) && manifest.icons.length >= 2, 'manifest.icons 含图标');
+for (const ic of manifest.icons) {
+  ok(existsSync(join(ROOT, ic.src)), `图标 ${ic.src} 文件存在`);
+}
+
 if (failures > 0) { console.error(`\n${failures} 个断言失败`); process.exit(1); }
 console.log('\npwa.test.js 全部通过');
