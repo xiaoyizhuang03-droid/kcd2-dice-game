@@ -201,3 +201,14 @@ body { background: var(--wood-dark); color: var(--text-light); font-family: Geor
   transition: color 160ms ease;
 }
 .pass-preview.has-value .pp-value { color: #ffd08a; }
+
+/* —— 移动端适配（PWA 添加到主屏后竖屏） —— */
+@media (max-width: 640px) {
+  .game { padding: 14px 10px; }
+  .game-header { flex-direction: column; gap: 10px; }
+  .scoreboard { grid-template-columns: 1fr; gap: 8px; }
+  .player-score { font-size: 34px; }
+  .dice-area { min-height: 112px; gap: 8px; }
+  .actions { gap: 8px; }
+  .btn { padding: 10px 14px; font-size: 14px; }
+}

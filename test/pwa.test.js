@@ -60,5 +60,13 @@ ok(swSrc.includes('clients.claim'), 'sw.js 使用 clients.claim');
 const register = readFileSync(join(ROOT, 'js/sw-register.js'), 'utf8');
 ok(register.includes("'serviceWorker' in navigator"), '注册脚本检测 SW 支持');
 
+console.log('\n[Task 4] index.html 挂载与移动端样式');
+ok(html.includes('rel="manifest" href="manifest.webmanifest"'), '挂载 manifest');
+ok(html.includes('name="theme-color" content="#3d2b1f"'), '含 theme-color meta');
+ok(html.includes('name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"'), 'viewport 已加固');
+ok(html.includes('js/sw-register.js'), '挂载 SW 注册脚本');
+const css = readFileSync(join(ROOT, 'css/style.css'), 'utf8');
+ok(css.includes('@media (max-width: 640px)'), 'CSS 含移动端媒体查询');
+
 if (failures > 0) { console.error(`\n${failures} 个断言失败`); process.exit(1); }
 console.log('\npwa.test.js 全部通过');
