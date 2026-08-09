@@ -189,7 +189,7 @@ let bustPending = false;
 let aiGeneration = 0;
 
 // —— 动画节奏（配合 ui.js 骰盅揭盅 900ms / settle 380ms） ——
-const BUST_DELAY = 2800;      // 爆骰结算延迟：骰盅揭盅后让玩家看清骰面再结算
+const BUST_DELAY = 3000;      // 爆骰结算延迟：骰盅揭盅后让玩家看清骰面再结算
 const AI_ROLL_DELAY = 1500;   // AI 掷骰前停顿（示意轮到 AI）
 const AI_REVEAL_DELAY = 1800; // AI 掷骰后停顿：等骰盅揭盅并停留看清骰面
 const AI_SELECT_DELAY = 420;  // AI 逐个选骰的间隔（展示它选了哪些骰子）
