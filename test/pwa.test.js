@@ -33,5 +33,32 @@ for (const ic of manifest.icons) {
   ok(existsSync(join(ROOT, ic.src)), `图标 ${ic.src} 文件存在`);
 }
 
+console.log('\n[Task 3] Service Worker');
+const swSrc = readFileSync(join(ROOT, 'sw.js'), 'utf8');
+const assetsMatch = swSrc.match(/const ASSETS = \[([\s\S]*?)\];/);
+ok(assetsMatch !== null, 'sw.js 含 ASSETS 白名单');
+const assets = assetsMatch[1].match(/'[^']+'/g).map((s) => s.slice(1, -1).replace(/^\.\//, ''));
+for (const rel of assets) {
+  ok(existsSync(join(ROOT, rel)), `缓存名单覆盖实际文件 ${rel}`);
+}
+// 覆盖检查：index.html 引用的本地静态资源全部在缓存名单内
+const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const refs = [...html.matchAll(/(?:href|src)="((?!https?:|#)[^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ''));
+for (const ref of refs) {
+  if (!existsSync(join(ROOT, ref))) continue; // 跳过尚不存在的挂载（Task 4 才加）
+  const rel = ref.replace(/^\.\//, '');
+  if (rel === 'js/sw-register.js') continue; // SW 不缓存自身注册脚本
+  ok(assets.includes(rel), `资源 ${rel} 在缓存名单内`);
+}
+// js/ 目录所有业务模块都被覆盖
+for (const f of readdirSync(join(ROOT, 'js'))) {
+  if (f === 'sw-register.js') continue;
+  ok(assets.includes(`js/${f}`), `js/${f} 在缓存名单内`);
+}
+ok(swSrc.includes('self.skipWaiting()'), 'sw.js 使用 skipWaiting');
+ok(swSrc.includes('clients.claim'), 'sw.js 使用 clients.claim');
+const register = readFileSync(join(ROOT, 'js/sw-register.js'), 'utf8');
+ok(register.includes("'serviceWorker' in navigator"), '注册脚本检测 SW 支持');
+
 if (failures > 0) { console.error(`\n${failures} 个断言失败`); process.exit(1); }
 console.log('\npwa.test.js 全部通过');
