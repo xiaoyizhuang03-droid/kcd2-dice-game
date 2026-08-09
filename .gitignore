@@ -1,0 +1,5 @@
+# 可视化伴生会话文件
+.superpowers/
+
+node_modules/
+dist/
