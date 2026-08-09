@@ -143,4 +143,20 @@ assert.equal(aiDecision({ level: 'aggressive', turnScore: 900, remaining: 2 }), 
 // 热骰必继续
 assert.equal(aiDecision({ level: 'conservative', turnScore: 300, remaining: 0, hot: true }), 'roll');
 
+import { TUTORIAL_STEPS, shouldShowTutorial, markTutorialDone, setTutorialStorage } from '../js/tutorial.js';
+
+// Node 环境无 localStorage → 注入内存存储
+const mem = new Map();
+setTutorialStorage({
+  getItem: k => mem.get(k) ?? null,
+  setItem: (k, v) => mem.set(k, v),
+  removeItem: k => mem.delete(k),
+});
+
+assert.ok(TUTORIAL_STEPS.length >= 3, '至少3步');
+assert.equal(TUTORIAL_STEPS[0].selector, '#btn-roll', '第一步指向掷骰按钮');
+assert.equal(shouldShowTutorial(), true, '首次应显示教程');
+markTutorialDone();
+assert.equal(shouldShowTutorial(), false, '标记后不再显示');
+
 console.log('engine.test.js 全部通过');
