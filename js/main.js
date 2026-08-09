@@ -159,6 +159,7 @@ function initSetupPanel() {
 let state = null;
 let ui = null;
 let aiRunning = false;
+let bustPending = false;
 let aiGeneration = 0;
 
 function startGame() {
@@ -180,12 +181,12 @@ function startGame() {
 function render() {
   ui.render(state);
   const cur = state.players[state.turn];
-  document.getElementById('btn-badge').disabled = state.phase === 'gameover' || !cur.badge || cur.badgeUsed || cur.badge === 'resurrection';
-  document.getElementById('btn-giveup').disabled = state.phase === 'gameover' || aiRunning;
+  document.getElementById('btn-badge').disabled = state.phase === 'gameover' || state.phase === 'bust' || !cur.badge || cur.badgeUsed || cur.badge === 'resurrection';
+  document.getElementById('btn-giveup').disabled = state.phase === 'gameover' || state.phase === 'bust' || aiRunning;
 }
 
 function handleAction(action) {
-  if (aiRunning) return;
+  if (aiRunning || bustPending) return;
   if (action.type === 'select') playHold();
   else if (action.type === 'pass') playBank();
   state = act(state, action);
@@ -203,8 +204,10 @@ function afterAction() {
     const pl = state.players[state.turn];
     const canResurrect = pl.badge === 'resurrection' && !pl.resurrectUsed;
     const isHuman = settings.mode === 'pvp' || state.turn === 0;
+    bustPending = true; // 爆骰动画窗口内屏蔽输入
     // 等骰盅揭盅动画播完（~950ms，与 ui 揭盅定时 900ms 衔接）再处理爆骰
     const resolveBust = () => {
+      bustPending = false;
       if (canResurrect && isHuman) {
         if (confirm('爆骰！是否使用转生徽章重掷？')) {
           state = act(state, { type: 'resurrect' });
