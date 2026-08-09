@@ -95,4 +95,11 @@ let devils = 0;
 for (let i = 0; i < 1000; i++) if (rollFace(DICE_TYPES.devil) === DEVIL) devils++;
 assert.ok(devils > 0, '恶魔之头骰应出现通配面');
 
+import { BADGES } from '../js/badges.js';
+
+for (const id of ['resurrection', 'carpenter', 'warlord', 'might']) {
+  assert.ok(BADGES[id], `缺少徽章 ${id}`);
+}
+assert.ok(BADGES.carpenter.effect === 'carpenter', '木匠徽章 effect 为 carpenter');
+
 console.log('rules.test.js 全部通过');
