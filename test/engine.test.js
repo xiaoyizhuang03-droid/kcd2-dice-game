@@ -1,0 +1,116 @@
+import assert from 'node:assert/strict';
+import { newGame, act, player } from '../js/engine.js';
+import { scoreSelection } from '../js/rules.js';
+
+const P1 = { name: '亨瑞', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: null };
+const P2 = { name: 'AI', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: null };
+const base = { mode: 'ai', target: 2000, players: [P1, P2] };
+
+// 开局：phase=idle，轮到我方，掷骰数=6
+let s = newGame(base);
+assert.equal(s.phase, 'idle');
+assert.equal(s.turn, 0);
+assert.equal(s.roll.length, 0);
+
+// 掷骰后 phase=rolling，6 颗
+s = act(s, { type: 'roll' });
+assert.equal(s.phase, 'rolling');
+assert.equal(s.roll.length, 6);
+
+// 受控 rng：固定返回 0（普通骰第一面=1）
+const rng = () => 0;
+let s1 = newGame(base, rng);
+s1 = act(s1, { type: 'roll' });
+assert.deepEqual(s1.roll, [1, 1, 1, 1, 1, 1], 'rng=0 应全为1');
+
+// 保留三1收手
+s1 = act(s1, { type: 'select', i: 0 });
+s1 = act(s1, { type: 'select', i: 1 });
+s1 = act(s1, { type: 'select', i: 2 });
+s1 = act(s1, { type: 'pass' });
+assert.equal(s1.players[0].total, 1000, '保留三1收手=1000');
+
+// 继续掷：保留后可继续
+let s2 = newGame(base, rng);
+s2 = act(s2, { type: 'roll' }); // [1x6]
+s2 = act(s2, { type: 'select', i: 0 });
+s2 = act(s2, { type: 'continueRoll' }); // 保留1(+100)，掷余5颗（rng=0 → 5个1）
+assert.equal(s2.turnScore, 100);
+assert.equal(s2.roll.length, 5);
+
+// 热骰：六个1全保留 → 累计8000，重掷6颗
+let s3 = newGame(base, rng);
+s3 = act(s3, { type: 'roll' }); // [1x6]
+for (let i = 0; i < 6; i++) s3 = act(s3, { type: 'select', i });
+s3 = act(s3, { type: 'continueRoll' }); // 全保留 → 热骰，重掷6颗
+assert.equal(s3.hot, true);
+assert.equal(s3.roll.length, 6);
+assert.equal(s3.turnScore, 8000, '六个1=1000×2^3=8000');
+
+// 爆骰：序列 rng 掷出 [2,3,4,6,2,3]（无1无5无三同）→ 无分即爆
+// 注：不能用恒定 rng——六颗同面（如恒3）会组成三同点，必然有分
+let midI = 0;
+const midSeq = [0.2, 0.4, 0.55, 0.9, 0.2, 0.4]; // → 面 [2,3,4,6,2,3]
+const midRng = () => midSeq[midI++ % midSeq.length];
+let s4 = newGame(base, midRng);
+s4 = act(s4, { type: 'roll' });
+assert.equal(s4.phase, 'bust', '全为3应爆骰');
+
+// 达标即胜
+let s5 = newGame({ mode: 'ai', target: 200, players: [P1, P2] }, rng);
+s5 = act(s5, { type: 'roll' }); // [1x6]
+for (let i = 0; i < 6; i++) s5 = act(s5, { type: 'select', i });
+s5 = act(s5, { type: 'pass' }); // 8000 >= 200
+assert.equal(s5.phase, 'gameover');
+assert.equal(s5.winner, 0);
+
+// 未达标则轮换
+let s6 = newGame(base, rng);
+s6 = act(s6, { type: 'roll' });
+s6 = act(s6, { type: 'select', i: 0 });
+s6 = act(s6, { type: 'pass' }); // +100
+assert.equal(s6.turn, 1, '收手后轮到对手');
+assert.equal(s6.roll.length, 0);
+
+// 投降
+let s7 = newGame(base, rng);
+s7 = act(s7, { type: 'giveUp' });
+assert.equal(s7.winner, 1, '投降对手胜');
+
+// 木匠徽章：3+5=150
+const CB = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: 'carpenter' };
+let s8 = newGame({ mode: 'ai', target: 2000, players: [CB, P2] });
+s8.roll = [3, 5, 2, 4, 6, 2];
+s8.phase = 'rolling';
+assert.equal(scoreSelection(s8.roll, { carpenter: true }), 150, '切口3+5=150');
+
+// 沃罗得徽章：收手×1.5
+const WL = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: 'warlord' };
+let s9 = newGame({ mode: 'ai', target: 2000, players: [WL, P2] }, rng);
+s9 = act(s9, { type: 'roll' }); // [1x6]
+s9 = act(s9, { type: 'useBadge' });
+s9 = act(s9, { type: 'select', i: 0 });
+s9 = act(s9, { type: 'pass' });
+assert.equal(s9.players[0].total, 150, '沃罗得100×1.5=150');
+assert.equal(s9.players[0].badgeUsed, true, '徽章标记已用');
+
+// 转生徽章：爆骰后可重掷
+const RS = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: 'resurrection' };
+let s10 = newGame({ mode: 'ai', target: 2000, players: [RS, P2] }, midRng);
+s10 = act(s10, { type: 'roll' }); // 爆骰
+assert.equal(s10.phase, 'bust');
+s10 = act(s10, { type: 'resurrect' }); // 重掷（序列仍为无分组合 → 再次爆骰）
+assert.equal(s10.phase, 'bust');
+assert.equal(s10.players[0].resurrectUsed, true);
+
+// 法师徽章（额外骰）：使用后下一次掷骰骰子数 +1
+const MG = { name: 'A', dieIds: ['normal','normal','normal','normal','normal','normal'], badge: 'might' };
+let s11 = newGame({ mode: 'ai', target: 2000, players: [MG, P2] }, rng);
+s11 = act(s11, { type: 'roll' }); // 6颗
+s11 = act(s11, { type: 'select', i: 0 });
+s11 = act(s11, { type: 'useBadge' }); // 启用法师
+s11 = act(s11, { type: 'continueRoll' }); // 剩余5 +1 → 6颗
+assert.equal(s11.roll.length, 6, '法师徽章额外骰生效');
+assert.equal(s11.players[0].badgeUsed, true, '法师徽章标记已用');
+
+console.log('engine.test.js 全部通过');
