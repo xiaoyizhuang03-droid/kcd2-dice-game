@@ -30,7 +30,7 @@ assert.equal(scoreSelection([2, 3, 4, 5, 6]), 750, '顺子2-6=750');
 assert.equal(scoreSelection([1, 2, 3, 4, 5, 6]), 1500, '全顺=1500');
 
 // 通配骰
-assert.equal(scoreSelection([DEVIL]), 0, '单独恶魔之头无分');
+assert.equal(scoreSelection([DEVIL]), 100, '单独恶魔之头可充当1=100');
 assert.equal(scoreSelection([1, 1, DEVIL]), 1000, '恶魔补三1');
 assert.equal(scoreSelection([2, 2, DEVIL]), 200, '恶魔补三2');
 assert.equal(scoreSelection([DEVIL, 2, 3, 4, 5, 6]), 1500, '恶魔补全顺');
@@ -103,8 +103,9 @@ for (const id of ['resurrection', 'carpenter', 'warlord', 'might']) {
 assert.ok(BADGES.carpenter.effect === 'carpenter', '木匠徽章 effect 为 carpenter');
 
 // 恶魔之头伴骰高亮（回归）
-assert.deepEqual(scoringDiceIndices([DEVIL, 2]), [0, 1], '恶魔+2 双双高亮');
-assert.ok(scoringDiceIndices([DEVIL, 2, 3, 4, 6, 2]).includes(1), '恶魔伴骰应被高亮');
-assert.equal(isValidSelection([DEVIL, 2]), true, '恶魔+2 为有效保留');
+assert.deepEqual(scoringDiceIndices([DEVIL, 2]), [0], '恶魔+2 仅高亮通配（2为赘骰）');
+assert.deepEqual(scoringDiceIndices([DEVIL, 2, 3, 4, 6, 2]), [0], '恶魔伴骰不再高亮');
+assert.equal(isValidSelection([DEVIL]), true, '单独恶魔头为有效保留');
+assert.equal(isValidSelection([DEVIL, 2]), false, '恶魔+2 无效（2为赘骰）');
 
 console.log('rules.test.js 全部通过');

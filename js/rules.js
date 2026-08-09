@@ -38,8 +38,6 @@ export function scoreSelection(faces, opts = {}) {
   const devils = faces.length - fixed.length;
   const best = (arr) => Math.max(straightScore(arr), fixedScore(arr), fixedScore(arr, opts.carpenter));
   if (devils === 0) return best(fixed);
-  // 单独一颗通配骰无法组成任何得分组合（不能当作单1/单5计分）
-  if (devils > 0 && faces.length === 1) return 0;
   let max = 0;
   const walk = (idx, arr) => {
     if (idx === devils) { max = Math.max(max, best(arr)); return; }
