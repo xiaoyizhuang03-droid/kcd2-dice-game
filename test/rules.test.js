@@ -68,4 +68,31 @@ assert.equal(scoreSelection([DEVIL, 2]), 100, '恶魔当1计分');
 assert.ok(scoringDiceIndices([DEVIL, 2]).includes(0), '通配骰应被高亮');
 assert.deepEqual(scoringDiceIndices([DEVIL, DEVIL, DEVIL, DEVIL, DEVIL]), [0, 1, 2, 3, 4], '五个通配全高亮');
 
+import { DICE_TYPES, rollFace } from '../js/dice.js';
+
+// 骰子类型完整
+for (const key of ['normal', 'lucky', 'devil', 'antiochus', 'trinity', 'even', 'odd', 'misfortune', 'unbalanced']) {
+  assert.ok(DICE_TYPES[key], `缺少骰子类型 ${key}`);
+}
+
+// 普通骰恒在 1-6 内
+for (let i = 0; i < 200; i++) {
+  const f = rollFace(DICE_TYPES.normal);
+  assert.ok(f >= 1 && f <= 6, '普通骰面应在1-6');
+}
+
+// 幸运骰偏向 1（权重 6 vs 1）→ 大样本下 1 出现多于 4
+let ones = 0, fours = 0;
+for (let i = 0; i < 20000; i++) {
+  const f = rollFace(DICE_TYPES.lucky);
+  if (f === 1) ones++;
+  if (f === 4) fours++;
+}
+assert.ok(ones > fours, `幸运骰应偏向1 (ones=${ones}, fours=${fours})`);
+
+// 恶魔之头骰会出现 0（通配）
+let devils = 0;
+for (let i = 0; i < 1000; i++) if (rollFace(DICE_TYPES.devil) === DEVIL) devils++;
+assert.ok(devils > 0, '恶魔之头骰应出现通配面');
+
 console.log('rules.test.js 全部通过');
