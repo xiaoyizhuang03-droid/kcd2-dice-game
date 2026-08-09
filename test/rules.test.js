@@ -102,4 +102,9 @@ for (const id of ['resurrection', 'carpenter', 'warlord', 'might']) {
 }
 assert.ok(BADGES.carpenter.effect === 'carpenter', '木匠徽章 effect 为 carpenter');
 
+// 恶魔之头伴骰高亮（回归）
+assert.deepEqual(scoringDiceIndices([DEVIL, 2]), [0, 1], '恶魔+2 双双高亮');
+assert.ok(scoringDiceIndices([DEVIL, 2, 3, 4, 6, 2]).includes(1), '恶魔伴骰应被高亮');
+assert.equal(isValidSelection([DEVIL, 2]), true, '恶魔+2 为有效保留');
+
 console.log('rules.test.js 全部通过');

@@ -65,8 +65,8 @@ export function isValidSelection(faces, opts = {}) {
   return true;
 }
 
-// 可得分骰子索引（1/5、三同点组、顺子）——用于 UI 高亮提示
-export function scoringDiceIndices(faces) {
+// 可得分骰子索引（1/5、三同点组、顺子、恶魔之头及可与其搭配的伴骰）——用于 UI 高亮提示
+export function scoringDiceIndices(faces, opts = {}) {
   const idx = new Set();
   const c = [0, 0, 0, 0, 0, 0, 0];
   const devils = faces.filter(f => f === DEVIL).length;
@@ -85,7 +85,14 @@ export function scoringDiceIndices(faces) {
   else if (faces.length === 5 && cover(1, 5)) faces.forEach((_, i) => idx.add(i));
   else if (faces.length === 5 && cover(2, 6)) faces.forEach((_, i) => idx.add(i));
   if (devils > 0 && scoreSelection(faces) > 0) {
-    faces.forEach((f, i) => { if (f === DEVIL) idx.add(i); });
+    const devilCount = faces.filter(f => f === DEVIL).length;
+    faces.forEach((f, i) => {
+      if (f === DEVIL) { idx.add(i); return; }
+      if (idx.has(i)) return;
+      // 该骰 + 全部通配骰 是否能构成有效保留
+      const subset = faces.filter(x => x === DEVIL).concat([f]);
+      if (isValidSelection(subset, { carpenter: opts.carpenter })) idx.add(i);
+    });
   }
   return [...idx].sort((a, b) => a - b);
 }

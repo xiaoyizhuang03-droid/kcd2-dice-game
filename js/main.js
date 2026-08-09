@@ -5,13 +5,14 @@ import { BADGES } from './badges.js';
 import { DICE_TYPES } from './dice.js';
 import { aiDecision } from './ai.js';
 import { TUTORIAL_STEPS, shouldShowTutorial, markTutorialDone } from './tutorial.js';
+import { playRoll, playHold, playBank } from './sound.js';
 
 const DICE_CHOICES = ['normal', 'lucky', 'devil', 'antiochus', 'trinity', 'even', 'odd', 'misfortune', 'unbalanced'];
 
 // —— 设置面板状态 ——
 let settings = {
   mode: 'ai', target: 2000, aiLevel: 'conservative',
-  myDice: [...DICE_CHOICES.slice(0, 6)], myBadge: null,
+  myDice: [...DICE_CHOICES.slice(0, 6)], myBadge: null, myBadge2: null,
 };
 
 function renderRulesContent() {
@@ -43,6 +44,7 @@ function initSetupPanel() {
       document.querySelectorAll('[data-mode]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       settings.mode = b.dataset.mode;
+      document.getElementById('p2-badge-field').classList.toggle('hidden', settings.mode !== 'pvp');
     });
   });
   // 目标分
@@ -112,6 +114,30 @@ function initSetupPanel() {
     bpicker.appendChild(el);
   });
 
+  // 玩家二徽章选择（仅 PvP）
+  const bpicker2 = document.getElementById('badge-picker2');
+  const none2 = document.createElement('button');
+  none2.className = 'pick-item selected';
+  none2.textContent = '无徽章';
+  none2.addEventListener('click', () => {
+    settings.myBadge2 = null;
+    bpicker2.querySelectorAll('.pick-item').forEach(x => x.classList.remove('selected'));
+    none2.classList.add('selected');
+  });
+  bpicker2.appendChild(none2);
+  Object.values(BADGES).forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'pick-item';
+    el.textContent = b.name;
+    el.title = b.desc;
+    el.addEventListener('click', () => {
+      settings.myBadge2 = b.id;
+      bpicker2.querySelectorAll('.pick-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+    bpicker2.appendChild(el);
+  });
+
   document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('setup-modal').classList.add('hidden');
     startGame();
@@ -141,7 +167,7 @@ function startGame() {
   const isPvp = settings.mode === 'pvp';
   const players = [
     { name: isPvp ? '玩家一' : '亨利', dieIds: [...settings.myDice], badge: settings.myBadge },
-    { name: isPvp ? '玩家二' : '酒馆老手', dieIds: Array(6).fill('normal'), badge: null },
+    { name: isPvp ? '玩家二' : '酒馆老手', dieIds: Array(6).fill('normal'), badge: isPvp ? settings.myBadge2 : null },
   ];
   if (!isPvp && settings.myDice.length < 6) players[0].dieIds = players[0].dieIds.concat(Array(6 - players[0].dieIds.length).fill('normal'));
   state = newGame({ mode: settings.mode, target: settings.target, players });
@@ -160,6 +186,9 @@ function render() {
 
 function handleAction(action) {
   if (aiRunning) return;
+  if (action.type === 'roll' || action.type === 'continueRoll') playRoll();
+  else if (action.type === 'select') playHold();
+  else if (action.type === 'pass') playBank();
   state = act(state, action);
   render();
   afterAction();
