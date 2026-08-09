@@ -143,7 +143,7 @@ export function createUI({ onAction }) {
     const turnEl = document.getElementById('turn-score');
     if (turnEl) turnEl.textContent = state.turnScore;
     if (btnRoll) btnRoll.disabled = state.phase !== 'idle' || state.hot;
-    if (btnContinue) btnContinue.disabled = !state.roll.some((_, i) => state.held[i]);
+    if (btnContinue) btnContinue.disabled = state.phase === 'gameover' || !state.roll.some((_, i) => state.held[i]);
     if (btnPass) btnPass.disabled = state.phase !== 'rolling' || !state.roll.some((_, i) => state.held[i]);
     if (btnGiveUp) btnGiveUp.disabled = state.phase === 'gameover';
   }

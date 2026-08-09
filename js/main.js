@@ -133,8 +133,11 @@ function initSetupPanel() {
 let state = null;
 let ui = null;
 let aiRunning = false;
+let aiGeneration = 0;
 
 function startGame() {
+  aiRunning = false;
+  aiGeneration++;
   const isPvp = settings.mode === 'pvp';
   const players = [
     { name: isPvp ? '玩家一' : '亨利', dieIds: [...settings.myDice], badge: settings.myBadge },
@@ -150,9 +153,9 @@ function startGame() {
 
 function render() {
   ui.render(state);
-  const logEl = document.getElementById('log');
-  logEl.textContent = state.log.slice(-3).join(' · ');
-  document.getElementById('btn-badge').disabled = state.phase === 'gameover' || !state.players[state.turn].badge || state.players[state.turn].badgeUsed;
+  const cur = state.players[state.turn];
+  document.getElementById('btn-badge').disabled = state.phase === 'gameover' || !cur.badge || cur.badgeUsed || cur.badge === 'resurrection';
+  document.getElementById('btn-giveup').disabled = state.phase === 'gameover' || aiRunning;
 }
 
 function handleAction(action) {
@@ -196,8 +199,10 @@ function afterAction() {
 }
 
 async function runAITurn() {
+  const gen = aiGeneration;
   while (state.turn === 1 && state.phase !== 'gameover') {
     await delay(650);
+    if (gen !== aiGeneration) return; // 重开一局：取消本循环
     if (state.phase === 'idle') {
       state = act(state, { type: 'roll' });
     } else if (state.phase === 'rolling') {
@@ -223,6 +228,7 @@ async function runAITurn() {
     render();
   }
   aiRunning = false;
+  render();
   afterAction();
 }
 
