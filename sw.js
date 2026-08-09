@@ -39,10 +39,21 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return; // 不缓存跨域资源（如 Google Fonts）
-  const inWhitelist = ASSETS.some((rel) =>
-    url.pathname === new URL(rel, self.registration.scope).pathname
+  const rel = ASSETS.find((r) =>
+    url.pathname === new URL(r, self.registration.scope).pathname
   );
-  if (!inWhitelist) return; // 白名单外走网络
+  if (!rel) return; // 白名单外走网络
+  // HTML 在线优先：在线总是拉取最新页面（发布后刷新即可生效），离线回退缓存
+  if (rel === './' || rel === './index.html') {
+    e.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return res;
+      }).catch(() => caches.match(req))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(req).then((hit) => hit || fetch(req).then((res) => {
       const copy = res.clone();
