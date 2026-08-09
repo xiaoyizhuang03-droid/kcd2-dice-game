@@ -26,9 +26,8 @@ for (const level of ['conservative', 'aggressive']) {
   });
   let guard = 0;
   while (s.phase !== 'gameover' && guard < 20000) {
-    s = act(s, { type: 'pass' }); // noop 若 phase 不符，安全
-    if (s.phase !== 'rolling' && s.phase !== 'idle') s = act(s, { type: 'bustAccept' });
-    if (s.phase === 'bust') { s = act(s, { type: 'bustAccept' }); continue; }
+    // 爆骰时结算并轮换（引擎 act 在非 bust 阶段为 noop，安全）
+    if (s.phase === 'bust') s = act(s, { type: 'bustAccept' });
     s = runAIStep(s, level);
     guard++;
   }
