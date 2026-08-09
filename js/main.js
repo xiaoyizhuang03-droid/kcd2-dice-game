@@ -273,9 +273,10 @@ async function runAITurn() {
       await delay(AI_REVEAL_DELAY); // 骰盅揭盅 + 停留，让玩家看清 AI 掷出的骰面
       if (gen !== aiGeneration) return;
       const hold = scoringDiceIndices(state.roll);
-      // 逐个选中，展示 AI 保留哪些骰子（高亮逐步出现）
+      // 逐个选中，展示 AI 保留哪些骰子（与玩家点击一致：上移 + 音效）
       for (const i of hold) {
         state = act(state, { type: 'select', i });
+        playHold();
         render();
         await delay(AI_SELECT_DELAY);
         if (gen !== aiGeneration) return;

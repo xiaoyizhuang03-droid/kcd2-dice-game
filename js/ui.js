@@ -127,6 +127,8 @@ export function createUI({ onAction }) {
   let lastRollCount = -1;
   let cupTimer = null;
   let justRevealed = false;
+  let bustRevealed = false;   // 爆骰提示是否已揭示（骰子先展示，再亮爆骰提示）
+  let bustRevealTimer = null;
 
   function renderDice(state) {
     const fresh = state.rollCount !== lastRollCount;
@@ -159,9 +161,17 @@ export function createUI({ onAction }) {
       diceArea.appendChild(cup);
       playShake();
       clearTimeout(cupTimer);
+      clearTimeout(bustRevealTimer);
       cupTimer = setTimeout(() => {
         justRevealed = true;
         if (currentState) render(currentState);
+        // 爆骰：骰子揭盅展示后，稍等片刻再亮起爆骰提示（先看骰子，再看结果）
+        if (currentState && currentState.phase === 'bust') {
+          bustRevealTimer = setTimeout(() => {
+            bustRevealed = true;
+            if (currentState) render(currentState);
+          }, 450);
+        }
       }, 900);
     } else if (justRevealed) {
       justRevealed = false;
@@ -177,7 +187,7 @@ export function createUI({ onAction }) {
       if (nameEl) {
         nameEl.textContent = pl.name;
         nameEl.parentElement.classList.toggle('active', i === state.turn && state.phase !== 'gameover');
-        nameEl.parentElement.classList.toggle('busted', i === state.turn && state.phase === 'bust');
+        nameEl.parentElement.classList.toggle('busted', i === state.turn && state.phase === 'bust' && bustRevealed);
       }
       if (badgeEl) {
         badgeEl.textContent = pl.badge ? BADGES[pl.badge].name : '';
@@ -214,13 +224,16 @@ export function createUI({ onAction }) {
   function renderStatus(state) {
     if (!statusEl) return;
     if (state.phase === 'gameover') statusEl.textContent = `${state.players[state.winner].name} 获胜！`;
-    else if (state.phase === 'bust') statusEl.textContent = `${state.players[state.turn].name} 爆骰！本回合得分清零`;
+    else if (state.phase === 'bust') statusEl.textContent = bustRevealed
+      ? `${state.players[state.turn].name} 爆骰！本回合得分清零`
+      : `${state.players[state.turn].name} 的回合 — 骰子揭晓`;
     else if (state.phase === 'rolling') statusEl.textContent = `${state.players[state.turn].name} 的回合 — 选择得分骰子`;
     else statusEl.textContent = `${state.players[state.turn].name} 的回合 — 点击掷骰`;
   }
 
   function render(state) {
     currentState = state;
+    if (state.phase !== 'bust') bustRevealed = false; // 离开爆骰状态后复位提示
     renderScoreboard(state);
     renderPassPreview(state);
     renderDice(state);
