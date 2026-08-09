@@ -130,4 +130,17 @@ s13 = act(s13, { type: 'roll' });
 const revived = JSON.parse(JSON.stringify(s13));
 assert.deepEqual(revived.players[0], s13.players[0], 'state 可序列化往返');
 
+import { aiDecision } from '../js/ai.js';
+
+// 高分局面保守型应收手
+assert.equal(aiDecision({ level: 'conservative', turnScore: 500, remaining: 2 }), 'pass');
+// 低分局面保守型应继续
+assert.equal(aiDecision({ level: 'conservative', turnScore: 100, remaining: 4 }), 'roll');
+// 激进型高分继续
+assert.equal(aiDecision({ level: 'aggressive', turnScore: 500, remaining: 3 }), 'roll');
+// 激进型极高分收手
+assert.equal(aiDecision({ level: 'aggressive', turnScore: 900, remaining: 2 }), 'pass');
+// 热骰必继续
+assert.equal(aiDecision({ level: 'conservative', turnScore: 300, remaining: 0, hot: true }), 'roll');
+
 console.log('engine.test.js 全部通过');
