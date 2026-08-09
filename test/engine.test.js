@@ -54,7 +54,7 @@ const midSeq = [0.2, 0.4, 0.55, 0.9, 0.2, 0.4]; // → 面 [2,3,4,6,2,3]
 const midRng = () => midSeq[midI++ % midSeq.length];
 let s4 = newGame(base, midRng);
 s4 = act(s4, { type: 'roll' });
-assert.equal(s4.phase, 'bust', '全为3应爆骰');
+assert.equal(s4.phase, 'bust', '无分组合应爆骰');
 
 // 达标即胜
 let s5 = newGame({ mode: 'ai', target: 200, players: [P1, P2] }, rng);
